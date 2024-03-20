@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connect Four</title>
+<style>
+.game-board {
+  display: grid;
+  grid-template-columns: repeat(7, 50px);
+  grid-template-rows: repeat(6, 50px);
+  gap: 5px;
+  border: 2px solid black;
+  margin: 20px auto;
+  width: 400px;
+  height: 350px;
+}
+
+.cell {
+  background-color: #ffffff;
+  border: 1px solid black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.red {
+  background-color: red;
+}
+
+.yellow {
+  background-color: yellow;
+}
+</style>
+</head>
+<body>
+<div class="game-board">
+</div>
+<button id="restartButton">Restart</button>
+<button id="rewindButton">Rewind</button>
+<script>
+const gameBoard = document.querySelector('.game-board');
+const restartButton = document.getElementById('restartButton');
+const rewindButton = document.getElementById('rewindButton');
+
+let currentPlayer = 'red';
+let boardState = new Array(6).fill().map(() => new Array(7).fill(null));
+let movesHistory = [];
+let gameOver = false;
+
+function checkWin(row, col) {
+  function checkDirection(dx, dy) {
+    let count = 1;
+    let r = row + dx;
+    let c = col + dy;
+
+    while (r >= 0 && r < 6 && c >= 0 && c < 7 && boardState[r][c] === currentPlayer) {
+      count++;
+      r += dx;
+      c += dy;
+    }
+
+    r = row - dx;
+    c = col - dy;
+    while (r >= 0 && r < 6 && c >= 0 && c < 7 && boardState[r][c] === currentPlayer) {
+      count++;
+      r -= dx;
+      c -= dy;
+    }
+
+    return count >= 4;
+  }
+
+  return checkDirection(1, 0) || checkDirection(0, 1) || checkDirection(1, 1) || checkDirection(1, -1);
+}
+
+function checkDraw() {
+  return boardState.every(row => row.every(cell => cell !== null));
+}
+
+function endGame(winner) {
+  gameOver = true;
+  alert(`${winner} wins!`);
+}
+
+function makeMove(column) {
+  for (let i = 5; i >= 0; i--) {
+    let cellIndex = i * 7 + column;
+
+    if (!gameOver && !gameBoard.children[cellIndex].classList.contains('red') && !gameBoard.children[cellIndex].classList.contains('yellow')) {
+      gameBoard.children[cellIndex].classList.add(currentPlayer);
+      boardState[i][column] = currentPlayer;
+      movesHistory.push({ row: i, col: column, player: currentPlayer });
+
+      if (checkWin(i, column)) {
+        endGame(currentPlayer);
+      } else if (checkDraw()) {
+        gameOver = true;
+        alert('It\'s a draw!');
+      } else {
+        currentPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
+      }
+      break;
+    }
+  }
+}
+
+function restartGame() {
+  location.reload();
+}
+
+function rewindMove() {
+  if (movesHistory.length > 0) {
+    let lastMove = movesHistory.pop();
+    let cellIndex = lastMove.row * 7 + lastMove.col;
+    gameBoard.children[cellIndex].classList.remove('red', 'yellow');
+    boardState[lastMove.row][lastMove.col] = null;
+    currentPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
+    gameOver = false;
+  }
+}
+
+for (let i = 0; i < 42; i++) {
+  const cell = document.createElement('div');
+  cell.classList.add('cell');
+  gameBoard.appendChild(cell);
+
+  cell.addEventListener('click', () => {
+    if (gameOver) return;
+
+    let column = i % 7;
+    makeMove(column);
+  });
+}
+
+restartButton.addEventListener('click', restartGame);
+rewindButton.addEventListener('click', rewindMove);
+</script>
+</body>
+</html>
+
+
+
+
